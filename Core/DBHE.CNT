@@ -1,0 +1,30 @@
+:Base DBHE.HLP>proc4
+:Title Dialog Box Help Editor
+1 Overview
+2 What is Dialog Box Help Editor?=Overview
+1 Creating context-sensitive Help for dialog boxes
+2 Creating a new context-sensitive Help project=NEW_PROJECT
+2 Assigning context-sensitive Help to the items in a dialog box=ASSIGNING_CS_HELP
+2 Assigning a single Help topic to multiple controls=MULTIPLE_CONTROLS
+2 Disabling Help for a control=DISABLE_HELP
+2 Assigning a custom Help ID=ASSIGN_CUSTOM_ID
+2 Viewing the context-sensitive Help you've written=VIEWING_HELP
+2 Determining whether any controls in a dialog box have changed=CHECKING_CHANGES
+1 Working with code
+2 Creating one array per dialog box=OneArrayPerDialog
+2 Viewing the code that Dialog Box Help Editor generates=VIEWING_CODE
+2 Saving code as a header file=SaveCode
+2 Notes for developers=Developers
+1 Changing Dialog Box Help Editor settings
+2 Specifying what type of Help IDs you want to use=TypeOfHelpID
+2 Using a prefix other than IDH for Help IDs=NonIDHPrefix
+2 Restoring a control's original Help ID=RESTORE_CONTROL_SETTINGS
+2 Changing the source files for a Dialog Box Help Editor project=CHANGE_SETTINGS
+2 Keeping the dialog box you're writing Help for in the foreground=DIALOG_ON_TOP
+2 Changing the color of the boxes Dialog Box Help Editor draws=ChangeColors
+2 Specifying a Word template for your RTF files=WordTemplate
+1 Annotating controls and viewing control properties
+2 Annotating a control=ANNOTATE
+2 Viewing the properties of a control=VIEW_PROPERTIES
+1 Questions and answers
+2 Questions and answers=Trouble
