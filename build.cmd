@@ -1,3 +1,4 @@
 @echo off
-Core\hhc.exe hhp.ini
+Core\php.exe builder.php
+echo.
 pause

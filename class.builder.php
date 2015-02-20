@@ -17,6 +17,7 @@ class CHMBuilder {
 	public $work_path   = 'root'; //工作目录（文档所在路径）
 	public $copyright   = '无名智者 [http://zhizhe8.net] @ StusGame GROUP [http://www.stus8.com/]'; //版权.
 	public $chm_title   = '帮助文档'; //chm标题
+	public $unincludes  = []; //不包含的文件和目录名
 	private $dir;
 	private $data;
 	public $error;
@@ -34,6 +35,29 @@ class CHMBuilder {
 		return $this->error;
 	}
 
+	/**
+	 * 生成所有所需内容
+	 */
+	public function buildAll() {
+		$this->buildHHP();
+		$this->buildHHC();
+		$this->buildHHI();
+	}
+	/**
+	 * 清扫生成CHM所需临时文件
+	 */
+	public function clean() {
+		if (file_exists($this->hhp_path)) {
+			unlink($this->hhp_path);
+		}
+		if (file_exists($this->hhc_path)) {
+			unlink($this->hhc_path);
+		}
+		if (file_exists($this->hhi_path)) {
+			unlink($this->hhi_path);
+		}
+	}
+
 	public function buildHHP(){
         $manual_files = $this->listDir($this->work_path);
         $files = implode(PHP_EOL, $manual_files);
@@ -48,7 +72,6 @@ Contents file={$this->hhc_path}
 COPYRIGHT={$this->copyright}
 Display compile progress=Yes
 Default topic={$this->chm_first_open}
-Error log file=chm_builder.Log
 Full-text search=Yes
 Index file={$this->hhi_path}
 Language=0x804
@@ -61,35 +84,35 @@ DATA;
 
 	public function buildHHC(){
             $list = array();
-            $file_tree = $this->listDirTree($this->chm_path,"{$this->chm_hhp} {$this->chm_uninclude_dirs}{$this->chm_uninclude_files}");
-            uksort($file_tree, 'self::cmp');
+            $file_tree = $this->listDirTree($this->work_path, $this->unincludes);
+            uksort($file_tree, array($this,'cmp'));
             foreach ($file_tree as $key => $value) {
                 if(is_string($value)){
                     $title = explode(DIRECTORY_SEPARATOR, $value);
                     $title = array_pop($title);
                     $title = rtrim($title,'.html');
-                    $list[] = <<<eof
+                    $list[] = <<<DATA
     <LI><OBJECT type="text/sitemap">
         <param name="Name" value="{$title}">
         <param name="Local" value="{$value}">
         </OBJECT>
-eof;
+DATA;
                 }else{
                     $child = array();
                     foreach ($value as $k => $val) {
                         $title = explode(DIRECTORY_SEPARATOR, $val);
                         $title = array_pop($title);
                         $title = rtrim($title,'.html');
-                        $child[] = <<<eof
+                        $child[] = <<<DATA
         <LI><OBJECT type="text/sitemap">
             <param name="Name" value="{$title}">
             <param name="Local" value="{$val}">
             <param name="ImageNumber" value="9">
             </OBJECT>
-eof;
+DATA;
                     }
                     $child = implode(PHP_EOL, $child);
-                    $list[] = <<<eof
+                    $list[] = <<<DATA
     <LI> <OBJECT type="text/sitemap">
         <param name="Name" value="{$key}">
         <param name="ImageNumber" value="1">
@@ -97,15 +120,16 @@ eof;
     <UL>  
 {$child}
     </UL>  
-eof;
+DATA;
                 }
             }
             $list = implode(PHP_EOL, $list);
-            $tpl = <<<eof
+            $tpl = <<< DATA
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <HTML>
 <HEAD>
-<meta name="GENERATOR" content="yangweijie code-tech.diandian.com">
+<meta http-equiv=Content-Type content="text/html; charset=gb2312">
+<meta name="GENERATOR" content="{$this->copyright}">
 <!-- Sitemap 1.0 -->
 </HEAD><BODY>
 <OBJECT type="text/site properties">
@@ -117,42 +141,43 @@ eof;
 {$list}
 </UL>
 </BODY></HTML>
-eof;
-            file_put_contents("{$this->chm_path}/{$this->chm_hhc}.hhc", $tpl);
+DATA;
+            file_put_contents($this->hhc_path, $tpl);
         }
 
-        public function buildHhk(){
+        public function buildHHI() {
             $list = array();
-            $file_tree = $this->listDir($this->chm_path);
+            $file_tree = $this->listDir($this->work_path);
             foreach ($file_tree as $key => $value) {
                 if(is_string($value)){
                     if(stripos($value, '.html')){
                         $title = explode(DIRECTORY_SEPARATOR, $value);
                         $title = array_pop($title);
                         $title = rtrim($title,'.html');
-                        $list[] = <<<eof
+                        $list[] = <<<DATA
     <LI><OBJECT type="text/sitemap">
         <param name="Name" value="{$title}">
         <param name="Local" value="{$value}">
         </OBJECT>
-eof;
+DATA;
                     }
                 }
             }
             $list = implode(PHP_EOL, $list);
-            $tpl = <<<eof
+            $tpl = <<<DATA
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <HTML>
 <HEAD>
-<meta name="GENERATOR" content="yangweijie code-tech.diandian.com">
+<meta http-equiv=Content-Type content="text/html; charset=gb2312">
+<meta name="GENERATOR" content="{$this->copyright}">
 <!-- Sitemap 1.0 -->
 </HEAD><BODY>
 <UL>
 {$list}
 </UL>
 </BODY></HTML>
-eof;
-            file_put_contents("{$this->chm_path}/{$this->chm_hhk}.hhk", $tpl);
+DATA;
+            file_put_contents($this->hhi_path, $tpl);
         }
 
 	public function iconv($str) {
@@ -196,7 +221,7 @@ eof;
             if ($dh = opendir($dirName)) {
                 $tree = array();
                 while (( $file = readdir($dh) ) !== false) {
-                    if ($file != "." && $file != ".." && stripos($remove, $file) === false) {
+                    if ($file != "." && $file != ".." && !in_array($file, $remove)) {
                         $filePath = $dirName . DIRECTORY_SEPARATOR . $file;
                         if (is_dir($filePath)) {
                             $arr = $this->listDirTree($filePath,$remove);
